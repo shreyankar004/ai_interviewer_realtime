@@ -1,0 +1,327 @@
+/* General Page Styles */
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    background-color: #0e0e10; /* Dark background */
+    color: #dcdde1; /* General text color */
+}
+
+/* Main Background */
+.main-bg {
+    background-color: #0e0e10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+
+/* Form Container */
+.form-container {
+    background-color: #1f1f23;
+    border-radius: 10px;
+    padding: 2.5rem;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 100%;
+}
+
+/* Title Styling */
+.title {
+    font-size: 1.8rem;
+    color: #ffffff;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Input Field Styles */
+.form-control.custom-input {
+    background-color: #2a2a2d; /* Darker box background */
+    color: #ffffff; /* Input text color */
+    border: 1px solid #3a3a3c;
+    border-radius: 6px;
+    padding: 0.8rem;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Placeholder Text Styling */
+::placeholder {
+    color: #a0a0a0; /* Light grey placeholder text */
+    opacity: 1; /* Ensures visibility */
+}
+
+input::placeholder, textarea::placeholder {
+    color: #a0a0a0; /* Light gray placeholder */
+    opacity: 1;
+}
+
+input:-ms-input-placeholder, textarea:-ms-input-placeholder { /* IE 10+ */
+    color: #a0a0a0;
+}
+
+input::-ms-input-placeholder, textarea::-ms-input-placeholder { /* Edge */
+    color: #a0a0a0;
+}
+
+/* Focus State for Input Fields */
+.form-control.custom-input:focus {
+    border-color: #4e8cff; /* Highlight border on focus */
+    box-shadow: 0 0 6px rgba(78, 140, 255, 0.5);
+    outline: none;
+}
+
+/* Dropdown Styling */
+select.custom-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+/* Submit Button */
+.btn.custom-btn {
+    background-color: #4e8cff; /* Blue button */
+    color: #ffffff; /* White text */
+    border: none;
+    padding: 0.8rem;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.3s ease-in-out;
+    text-align: center;
+}
+
+.btn.custom-btn:hover {
+    background-color: #3b6dcf;
+    box-shadow: 0 4px 8px rgba(78, 140, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Responsive Design for Small Screens */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 1.5rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+}
+
+/* ============================================================
+   Interview screen
+   ============================================================ */
+.interview-container {
+    background-color: #1f1f23;
+    border-radius: 10px;
+    padding: 2.5rem;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+    max-width: 680px;
+    width: 100%;
+}
+
+.question-text {
+    font-size: 1.25rem;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Mode selector */
+.mode-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.mode-label {
+    color: #a0a0a0;
+    font-size: 0.9rem;
+}
+
+.btn-mode {
+    background-color: #2a2a2d;
+    color: #dcdde1;
+    border: 1px solid #3a3a3c;
+    border-radius: 6px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.9rem;
+}
+
+.btn-mode.active {
+    background-color: #4e8cff;
+    color: #ffffff;
+    border-color: #4e8cff;
+}
+
+.answer-panel {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.answer-label {
+    display: block;
+    text-align: left;
+    color: #a0a0a0;
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+}
+
+.answer-textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Mic indicator */
+.mic-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: #dcdde1;
+}
+
+.mic-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #4e8cff;
+    display: inline-block;
+}
+
+.mic-indicator.recording .mic-dot {
+    background-color: #ff4d4d;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+}
+
+.unsupported-msg {
+    color: #ffb84d;
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   Result dashboard
+   ============================================================ */
+.result-container {
+    background-color: #1f1f23;
+    border-radius: 10px;
+    padding: 2.5rem;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+    max-width: 760px;
+    width: 100%;
+    color: #dcdde1;
+}
+
+.report-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a0a0a0;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.overall-score {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.overall-label {
+    color: #4e8cff;
+    font-weight: 600;
+}
+
+.category-scores {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.category-row {
+    margin-bottom: 0.75rem;
+    text-align: left;
+}
+
+.category-row-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.category-bar-track {
+    background-color: #2a2a2d;
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.category-bar-fill {
+    background-color: #4e8cff;
+    height: 100%;
+}
+
+.report-section {
+    text-align: left;
+    border-top: 1px solid #2a2a2d;
+    padding-top: 1.25rem;
+}
+
+.section-title {
+    font-size: 1.05rem;
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+}
+
+.section-text {
+    color: #dcdde1;
+    line-height: 1.5;
+}
+
+.report-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.report-list li {
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+}
+
+.question-feedback-card {
+    background-color: #2a2a2d;
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.9rem;
+}
+
+.qf-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.4rem;
+}
+
+.qf-question, .qf-answer, .qf-feedback {
+    font-size: 0.92rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+}
+
+.qf-method {
+    opacity: 0.7;
+    font-size: 0.85rem;
+}

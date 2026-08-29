@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Interview (Realtime)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ request.url_for('static', path='styles.css') }}">
+</head>
+<body>
+  <div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center main-bg py-4">
+
+    <!-- ===================== INTERVIEW SCREEN ===================== -->
+    <div id="interview-screen" class="interview-container p-4 text-center">
+      <h1 class="title mb-3">Your AI Interview</h1>
+      <button id="start-interview-btn" class="btn btn-primary mb-4">Start My Interview</button>
+      <button id="end-interview-btn" class="btn btn-danger mb-4" style="display: none;">End Interview</button>
+
+      <div id="question-area" style="display:none; text-align:center;">
+        <p id="current-question" class="question-text mb-2"></p>
+        <button id="replay-question-btn" class="btn btn-sm btn-outline-light mb-3">🔊 Replay Question</button>
+        <p id="status-line" class="mb-3" style="opacity:0.8; font-size:0.9rem;"></p>
+
+        <!-- Mode selector -->
+        <div class="mode-selector mb-3">
+          <span class="mode-label me-2">Answer using:</span>
+          <button id="mode-voice-btn" type="button" class="btn btn-mode active">🎤 Voice</button>
+          <button id="mode-text-btn" type="button" class="btn btn-mode">⌨️ Type</button>
+        </div>
+
+        <!-- Voice answer panel -->
+        <div id="voice-panel" class="answer-panel">
+          <div id="mic-indicator" class="mic-indicator mb-2">
+            <span id="mic-dot" class="mic-dot"></span>
+            <span id="mic-indicator-text">🎤 Ready to listen</span>
+          </div>
+          <p id="voice-unsupported-msg" class="unsupported-msg" style="display:none;">
+            Voice input is not supported in this browser. Please use the text-answer option.
+          </p>
+          <div class="d-flex gap-2 justify-content-center flex-wrap mb-2">
+            <button id="mic-start-btn" class="btn btn-outline-light">🎤 Start Speaking</button>
+            <button id="mic-stop-btn" class="btn btn-outline-light" style="display:none;">⏹ Stop</button>
+          </div>
+          <label class="answer-label">Your Answer</label>
+          <textarea id="voice-transcript" class="form-control custom-input answer-textarea" rows="4"
+                    placeholder="Your spoken answer will appear here — review and edit before submitting."></textarea>
+          <div class="d-flex gap-2 justify-content-center flex-wrap mt-2">
+            <button id="voice-submit-btn" class="btn btn-primary">✓ Submit Answer</button>
+          </div>
+        </div>
+
+        <!-- Text answer panel -->
+        <div id="text-panel" class="answer-panel" style="display:none;">
+          <label class="answer-label">Your Answer</label>
+          <textarea id="answer-textarea" class="form-control custom-input answer-textarea" rows="4"
+                    placeholder="Type your answer here... (Ctrl+Enter to submit)"></textarea>
+          <div class="d-flex gap-2 justify-content-center flex-wrap mt-2">
+            <button id="text-submit-btn" class="btn btn-primary">Submit Answer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== RESULT DASHBOARD ===================== -->
+    <div id="result-screen" class="result-container p-4" style="display:none;">
+      <div id="analyzing-view" class="text-center">
+        <h2 class="title mb-3">Analyzing your interview...</h2>
+        <div class="spinner-border text-light" role="status"></div>
+        <p class="mt-3" style="opacity:0.8;">This usually takes a few seconds.</p>
+      </div>
+
+      <div id="report-view" style="display:none;">
+        <div class="text-center mb-4">
+          <p class="report-eyebrow">Interview Performance</p>
+          <div id="overall-score" class="overall-score">--/100</div>
+          <div id="overall-label" class="overall-label"></div>
+        </div>
+
+        <div id="category-scores" class="category-scores mb-4"></div>
+
+        <div class="report-section mb-4">
+          <h3 class="section-title">Overall Assessment</h3>
+          <p id="overall-assessment" class="section-text"></p>
+        </div>
+
+        <div class="report-section mb-4">
+          <h3 class="section-title">Strengths</h3>
+          <ul id="strengths-list" class="report-list"></ul>
+        </div>
+
+        <div class="report-section mb-4">
+          <h3 class="section-title">Areas for Improvement</h3>
+          <ul id="improvements-list" class="report-list"></ul>
+        </div>
+
+        <div class="report-section mb-4">
+          <h3 class="section-title">Question-by-Question Review</h3>
+          <div id="question-feedback-list"></div>
+        </div>
+
+        <div class="text-center">
+          <button id="restart-btn" class="btn btn-primary">Start New Interview</button>
+        </div>
+      </div>
+
+      <div id="report-error-view" style="display:none;" class="text-center">
+        <h2 class="title mb-3">We couldn't generate the interview report.</h2>
+        <p id="report-error-message" class="mb-3" style="opacity:0.85;"></p>
+        <button id="retry-analysis-btn" class="btn btn-primary me-2">Try Again</button>
+        <button id="restart-btn-2" class="btn btn-outline-light">Start New Interview</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ---------------------------------------------------------------
+    // Element references
+    // ---------------------------------------------------------------
+    const interviewScreen = document.getElementById("interview-screen");
+    const resultScreen = document.getElementById("result-screen");
+
+    const startBtn = document.getElementById("start-interview-btn");
+    const endBtn = document.getElementById("end-interview-btn");
+    const questionArea = document.getElementById("question-area");
+    const currentQuestionEl = document.getElementById("current-question");
+    const replayBtn = document.getElementById("replay-question-btn");
+    const statusLine = document.getElementById("status-line");
+
+    const modeVoiceBtn = document.getElementById("mode-voice-btn");
+    const modeTextBtn = document.getElementById("mode-text-btn");
+    const voicePanel = document.getElementById("voice-panel");
+    const textPanel = document.getElementById("text-panel");
+
+    const micIndicator = document.getElementById("mic-indicator");
+    const micIndicatorText = document.getElementById("mic-indicator-text");
+    const voiceUnsupportedMsg = document.getElementById("voice-unsupported-msg");
+    const micStartBtn = document.getElementById("mic-start-btn");
+    const micStopBtn = document.getElementById("mic-stop-btn");
+    const voiceTranscript = document.getElementById("voice-transcript");
+    const voiceSubmitBtn = document.getElementById("voice-submit-btn");
+
+    const answerTextarea = document.getElementById("answer-textarea");
+    const textSubmitBtn = document.getElementById("text-submit-btn");
+
+    const analyzingView = document.getElementById("analyzing-view");
+    const reportView = document.getElementById("report-view");
+    const reportErrorView = document.getElementById("report-error-view");
+    const reportErrorMessage = document.getElementById("report-error-message");
+
+    let interviewDone = false;
+    let currentMode = "voice"; // "voice" | "text"
+    let lastQuestionText = "";
+
+    // ---------------------------------------------------------------
+    // Text-to-Speech (existing functionality, preserved)
+    // ---------------------------------------------------------------
+    function speak(text) {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 1.0;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function showQuestion(text) {
+      lastQuestionText = text;
+      currentQuestionEl.innerText = text;
+      speak(text);
+    }
+
+    replayBtn.addEventListener("click", () => {
+      if (lastQuestionText) speak(lastQuestionText);
+    });
+
+    // ---------------------------------------------------------------
+    // Speech recognition (voice answers) — browser-native, free
+    // ---------------------------------------------------------------
+    const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isListening = false;
+
+    if (SpeechRecognitionImpl) {
+      recognition = new SpeechRecognitionImpl();
+      recognition.lang = "en-US";
+      recognition.interimResults = true;
+      recognition.continuous = true;
+      recognition.maxAlternatives = 1;
+
+      let finalTranscript = "";
+
+      recognition.onstart = () => {
+        isListening = true;
+        finalTranscript = voiceTranscript.value ? voiceTranscript.value + " " : "";
+        setMicListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const chunk = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += chunk + " ";
+          } else {
+            interim += chunk;
+          }
+        }
+        voiceTranscript.value = (finalTranscript + interim).trim();
+      };
+
+      recognition.onerror = (event) => {
+        setMicListening(false);
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          micIndicatorText.innerText = "🎙️ Microphone permission denied. You can type your answer instead.";
+        } else if (event.error === "no-speech") {
+          micIndicatorText.innerText = "Didn't catch that — try again, or edit the text below.";
+        } else {
+          micIndicatorText.innerText = "Microphone access is unavailable. You can type your answer instead.";
+        }
+      };
+
+      recognition.onend = () => {
+        setMicListening(false);
+        if (voiceTranscript.value.trim()) {
+          micIndicatorText.innerText = "✓ Voice captured — review and submit below.";
+        } else {
+          micIndicatorText.innerText = "🎤 Ready to listen";
+        }
+      };
+    } else {
+      micStartBtn.style.display = "none";
+      micStopBtn.style.display = "none";
+      voiceUnsupportedMsg.style.display = "block";
+      micIndicator.style.display = "none";
+    }
+
+    function setMicListening(listening) {
+      isListening = listening;
+      micIndicator.classList.toggle("recording", listening);
+      micStartBtn.style.display = listening ? "none" : "inline-block";
+      micStopBtn.style.display = listening ? "inline-block" : "none";
+      if (listening) {
+        micIndicatorText.innerText = "🔴 Listening... speak your answer clearly.";
+      }
+    }
+
+    micStartBtn.addEventListener("click", () => {
+      if (!recognition) return;
+      try {
+        recognition.start();
+      } catch (e) {
+        // start() throws if already started; ignore
+      }
+    });
+
+    micStopBtn.addEventListener("click", () => {
+      if (!recognition) return;
+      recognition.stop();
+    });
+
+    // ---------------------------------------------------------------
+    // Mode switching
+    // ---------------------------------------------------------------
+    function setMode(mode) {
+      currentMode = mode;
+      const voiceActive = mode === "voice";
+      voicePanel.style.display = voiceActive ? "block" : "none";
+      textPanel.style.display = voiceActive ? "none" : "block";
+      modeVoiceBtn.classList.toggle("active", voiceActive);
+      modeTextBtn.classList.toggle("active", !voiceActive);
+      if (!voiceActive && recognition && isListening) {
+        recognition.stop();
+      }
+    }
+
+    modeVoiceBtn.addEventListener("click", () => setMode("voice"));
+    modeTextBtn.addEventListener("click", () => setMode("text"));
+
+    // ---------------------------------------------------------------
+    // Submitting answers
+    // ---------------------------------------------------------------
+    async function submitAnswer(answerText, inputMethod) {
+      if (interviewDone) return;
+
+      const trimmed = (answerText || "").trim();
+      if (!trimmed) {
+        statusLine.innerText = "Please provide an answer before continuing.";
+        return;
+      }
+
+      if (recognition && isListening) recognition.stop();
+
+      statusLine.innerText = "Thinking...";
+      setControlsEnabled(false);
+
+      try {
+        const res = await fetch("/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answer: trimmed, input_method: inputMethod }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          statusLine.innerText = "Error: " + data.error;
+          setControlsEnabled(true);
+          return;
+        }
+
+        voiceTranscript.value = "";
+        answerTextarea.value = "";
+        micIndicatorText.innerText = "🎤 Ready to listen";
+
+        showQuestion(data.question);
+        interviewDone = !!data.done;
+
+        if (interviewDone) {
+          statusLine.innerText = "Interview complete.";
+          finishInterview();
+        } else {
+          statusLine.innerText = "";
+          setControlsEnabled(true);
+        }
+      } catch (e) {
+        statusLine.innerText = "Network error, please try again.";
+        setControlsEnabled(true);
+      }
+    }
+
+    function setControlsEnabled(enabled) {
+      micStartBtn.disabled = !enabled;
+      micStopBtn.disabled = !enabled;
+      voiceSubmitBtn.disabled = !enabled;
+      voiceTranscript.disabled = !enabled;
+      answerTextarea.disabled = !enabled;
+      textSubmitBtn.disabled = !enabled;
+    }
+
+    voiceSubmitBtn.addEventListener("click", () => submitAnswer(voiceTranscript.value, "voice"));
+    textSubmitBtn.addEventListener("click", () => submitAnswer(answerTextarea.value, "text"));
+
+    answerTextarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        submitAnswer(answerTextarea.value, "text");
+      }
+    });
+
+    // ---------------------------------------------------------------
+    // Starting the interview
+    // ---------------------------------------------------------------
+    startBtn.addEventListener("click", async () => {
+      startBtn.style.display = "none";
+      endBtn.style.display = "inline-block";
+      questionArea.style.display = "block";
+      statusLine.innerText = "Preparing your first question...";
+
+      try {
+        const res = await fetch("/start_interview").then(r => r.json());
+        if (res.error) {
+          statusLine.innerText = "Error: " + res.error;
+          return;
+        }
+        showQuestion(res.question);
+        statusLine.innerText = "";
+      } catch (e) {
+        statusLine.innerText = "Network error, please try again.";
+      }
+    });
+
+    // ---------------------------------------------------------------
+    // Ending the interview / running analysis
+    // ---------------------------------------------------------------
+    endBtn.addEventListener("click", () => {
+      if (interviewDone) return;
+      window.speechSynthesis.cancel();
+      if (recognition && isListening) recognition.stop();
+      interviewDone = true;
+      finishInterview();
+    });
+
+    function finishInterview() {
+      window.speechSynthesis.cancel();
+      interviewScreen.style.display = "none";
+      resultScreen.style.display = "block";
+      analyzingView.style.display = "block";
+      reportView.style.display = "none";
+      reportErrorView.style.display = "none";
+      runAnalysis();
+    }
+
+    async function runAnalysis() {
+      analyzingView.style.display = "block";
+      reportView.style.display = "none";
+      reportErrorView.style.display = "none";
+
+      try {
+        const res = await fetch("/analyze_interview", { method: "POST" });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          showReportError(data.error || "Unknown error.");
+          return;
+        }
+
+        renderReport(data);
+      } catch (e) {
+        showReportError("Network error while generating the report.");
+      }
+    }
+
+    function showReportError(message) {
+      analyzingView.style.display = "none";
+      reportView.style.display = "none";
+      reportErrorView.style.display = "block";
+      reportErrorMessage.innerText = message;
+    }
+
+    function scoreLabel(score) {
+      if (score >= 85) return "Excellent Performance";
+      if (score >= 70) return "Good Performance";
+      if (score >= 50) return "Fair Performance";
+      return "Needs Improvement";
+    }
+
+    const CATEGORY_LABELS = {
+      answer_quality: "Answer Quality",
+      technical_knowledge: "Technical Knowledge",
+      communication: "Communication",
+      problem_solving: "Problem Solving",
+      relevance: "Relevance",
+    };
+
+    function renderReport(data) {
+      analyzingView.style.display = "none";
+      reportErrorView.style.display = "none";
+      reportView.style.display = "block";
+
+      document.getElementById("overall-score").innerText = `${data.overall_score} / 100`;
+      document.getElementById("overall-label").innerText = scoreLabel(data.overall_score);
+
+      const catContainer = document.getElementById("category-scores");
+      catContainer.innerHTML = "";
+      Object.entries(data.category_scores || {}).forEach(([key, value]) => {
+        const label = CATEGORY_LABELS[key] || key;
+        const row = document.createElement("div");
+        row.className = "category-row";
+        row.innerHTML = `
+          <div class="category-row-top">
+            <span>${label}</span>
+            <span>${value}/100</span>
+          </div>
+          <div class="category-bar-track">
+            <div class="category-bar-fill" style="width:${value}%;"></div>
+          </div>
+        `;
+        catContainer.appendChild(row);
+      });
+
+      document.getElementById("overall-assessment").innerText = data.overall_assessment || "";
+
+      const strengthsList = document.getElementById("strengths-list");
+      strengthsList.innerHTML = "";
+      (data.strengths || []).forEach(s => {
+        const li = document.createElement("li");
+        li.innerText = "✓ " + s;
+        strengthsList.appendChild(li);
+      });
+
+      const improvementsList = document.getElementById("improvements-list");
+      improvementsList.innerHTML = "";
+      (data.areas_for_improvement || []).forEach(s => {
+        const li = document.createElement("li");
+        li.innerText = "• " + s;
+        improvementsList.appendChild(li);
+      });
+
+      const qfContainer = document.getElementById("question-feedback-list");
+      qfContainer.innerHTML = "";
+      (data.question_feedback || []).forEach(item => {
+        const card = document.createElement("div");
+        card.className = "question-feedback-card";
+        const methodTag = item.input_method === "voice" ? "🎤 Voice" : "⌨️ Text";
+        card.innerHTML = `
+          <div class="qf-header">
+            <span class="qf-title">Question ${item.question_number}</span>
+            <span class="qf-score">Score: ${item.score}/100</span>
+          </div>
+          <p class="qf-question"><strong>Question:</strong> ${escapeHtml(item.question)}</p>
+          <p class="qf-answer"><strong>Your Answer</strong> <span class="qf-method">(${methodTag})</span>:<br>${escapeHtml(item.answer)}</p>
+          <p class="qf-feedback"><strong>Feedback:</strong> ${escapeHtml(item.feedback)}</p>
+        `;
+        qfContainer.appendChild(card);
+      });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.innerText = str == null ? "" : String(str);
+      return div.innerHTML;
+    }
+
+    document.getElementById("retry-analysis-btn").addEventListener("click", runAnalysis);
+    document.getElementById("restart-btn").addEventListener("click", () => { window.location.href = "/"; });
+    document.getElementById("restart-btn-2").addEventListener("click", () => { window.location.href = "/"; });
+
+    // Default mode on load
+    setMode("voice");
+  </script>
+</body>
+</html>
